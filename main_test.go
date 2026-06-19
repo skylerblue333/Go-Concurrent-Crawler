@@ -1,39 +1,32 @@
 package main
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
+	"context"
+	"sync"
 	"testing"
 )
 
-func TestHealth(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/health", nil)
-	rr := httptest.NewRecorder()
-	handleHealth(rr, req)
+func TestCrawlerConcurrency(t *testing.T) {
+	crawler := NewCrawler(5)
+	wg := &sync.WaitGroup{}
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("Expected 200 OK, got %d", rr.Code)
+	wg.Add(1)
+	go crawler.Crawl(ctx, "http://test.com", 2, wg)
+
+	go func() {
+		wg.Wait()
+		close(crawler.results)
+	}()
+
+	count := 0
+	for range crawler.results {
+		count++
 	}
 
-	var resp map[string]interface{}
-	json.NewDecoder(rr.Body).Decode(&resp)
-	if resp["status"] != "ok" {
-		t.Errorf("Expected status 'ok', got %v", resp["status"])
-	}
-}
-
-func TestProcess(t *testing.T) {
-	initial := state.Processed
-	req, _ := http.NewRequest("POST", "/process", nil)
-	rr := httptest.NewRecorder()
-	handleProcess(rr, req)
-
-	if rr.Code != http.StatusAccepted {
-		t.Errorf("Expected 202 Accepted, got %d", rr.Code)
-	}
-
-	if state.Processed != initial+1 {
-		t.Errorf("Expected state to increment")
+	if count == 0 {
+		t.Errorf("Expected crawler to yield results")
 	}
 }
