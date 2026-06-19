@@ -1,57 +1,52 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
 )
 
-type CrawlResult struct {
-	URL    string
-	Status int
-	Err    error
+type ServiceState struct {
+	mu        sync.RWMutex
+	Processed int
+	Domain    string
 }
 
-func crawl(url string) CrawlResult {
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		return CrawlResult{URL: url, Err: err}
-	}
-	defer resp.Body.Close()
-	return CrawlResult{URL: url, Status: resp.StatusCode}
+var state = &ServiceState{Domain: "crawler"}
+
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":    "ok",
+		"domain":    state.Domain,
+		"processed": state.Processed,
+	})
 }
 
-func CrawlAll(urls []string, concurrency int) []CrawlResult {
-	sem := make(chan struct{}, concurrency)
-	results := make([]CrawlResult, len(urls))
-	var wg sync.WaitGroup
-
-	for i, url := range urls {
-		wg.Add(1)
-		go func(idx int, u string) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			results[idx] = crawl(u)
-		}(i, url)
-	}
-	wg.Wait()
-	return results
+func handleProcess(w http.ResponseWriter, r *http.Request) {
+	state.mu.Lock()
+	state.Processed++
+	state.mu.Unlock()
+	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprint(w, `{"status":"processing"}`)
 }
 
 func main() {
-	urls := []string{
-		"https://httpbin.org/status/200",
-		"https://httpbin.org/status/404",
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", handleHealth)
+	mux.HandleFunc("/process", handleProcess)
+
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
-	results := CrawlAll(urls, 5)
-	for _, r := range results {
-		if r.Err != nil {
-			fmt.Printf("ERROR %s: %v\n", r.URL, r.Err)
-		} else {
-			fmt.Printf("OK    %s -> %d\n", r.URL, r.Status)
-		}
-	}
+
+	log.Println("Server starting on :8080")
+	log.Fatal(server.ListenAndServe())
 }

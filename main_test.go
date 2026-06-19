@@ -1,28 +1,39 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestCrawlAll(t *testing.T) {
-	s1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-	}))
-	defer s1.Close()
+func TestHealth(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/health", nil)
+	rr := httptest.NewRecorder()
+	handleHealth(rr, req)
 
-	s2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
-	}))
-	defer s2.Close()
-
-	results := CrawlAll([]string{s1.URL, s2.URL}, 2)
-
-	if results[0].Status != 200 {
-		t.Errorf("expected 200, got %d", results[0].Status)
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK, got %d", rr.Code)
 	}
-	if results[1].Status != 404 {
-		t.Errorf("expected 404, got %d", results[1].Status)
+
+	var resp map[string]interface{}
+	json.NewDecoder(rr.Body).Decode(&resp)
+	if resp["status"] != "ok" {
+		t.Errorf("Expected status 'ok', got %v", resp["status"])
+	}
+}
+
+func TestProcess(t *testing.T) {
+	initial := state.Processed
+	req, _ := http.NewRequest("POST", "/process", nil)
+	rr := httptest.NewRecorder()
+	handleProcess(rr, req)
+
+	if rr.Code != http.StatusAccepted {
+		t.Errorf("Expected 202 Accepted, got %d", rr.Code)
+	}
+
+	if state.Processed != initial+1 {
+		t.Errorf("Expected state to increment")
 	}
 }
