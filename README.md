@@ -1,33 +1,34 @@
 # Go-Concurrent-Crawler
 
-![CI](https://github.com/skylerblue333/Go-Concurrent-Crawler/workflows/CI/badge.svg)
-![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg?style=flat&logo=go)
-![gRPC](https://img.shields.io/badge/gRPC-Ready-244c5a.svg)
+Highly concurrent web crawler using goroutines and channels.
 
-A high-throughput, bounded-concurrency web crawling engine using Go channels, WaitGroups, and semaphore patterns to prevent resource exhaustion.
+## 🚀 Overview
+This repository contains a professional implementation of **Go Concurrent Crawler**. It is designed with clean code principles and focuses on functionality and reliability.
 
-## System Architecture
+## 🛠️ Tech Stack
+- **Primary Language**: Go
+- **Environment**: Node.js / Python / Rust (as applicable)
+- **Key Features**: 
+  - Modular architecture
+  - Clean implementation of core logic
+  - Scalable design
 
+## 📂 Getting Started
 
-```mermaid
-graph TD
-    Client -->|gRPC/HTTP2| LB[Go Load Balancer]
-    LB -->|Round Robin| Node1[Service Node 1]
-    LB -->|Round Robin| Node2[Service Node 2]
-    Node1 -.->|OpenTelemetry| Jaeger[Jaeger Tracing]
-    Node2 -.->|OpenTelemetry| Jaeger
-    Node1 <-->|Consul| Discovery[Service Registry]
-```
+### Prerequisites
+- Ensure you have the latest version of the relevant runtime (Node.js, Python, or Rust) installed.
 
-
-## Elite Features
-- **Semaphore Pattern**: Bounded worker pool using buffered channels.
-- **Context Cancellation**: Timeout and cancellation propagation across all goroutines.
-- **Thread-Safe Deduplication**: `sync.Map` for lock-free URL visited tracking.
-
-## Quick Start
+### Installation
 ```bash
-go mod tidy
-go test ./...
-go run main.go
+git clone https://github.com/skylerblue333/Go-Concurrent-Crawler.git
+cd Go-Concurrent-Crawler
 ```
+
+### Usage
+Follow the specific language conventions to run the project (e.g., `npm install`, `cargo build`, or `pip install -r requirements.txt`).
+
+## 🛡️ License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+Built by [Skyler Blue](https://github.com/skylerblue333)
