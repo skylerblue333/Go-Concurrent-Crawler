@@ -1,44 +1,30 @@
-<!-- PORTFOLIO PROJECT PROFILE: maintained by the repository owner -->
-
-## Project profile and code-audit snapshot
-
-**What this is:** **Go-Concurrent-Crawler** is a public repository described as: “Highly concurrent web crawler using goroutines and channels. #SkyCoin4444 #AI #Blockchain #DevOps #Innovation” Its dominant language signals are **Go (2 files)**.
-
-**Why it has value:** Its value is best understood through the implementation evidence currently present in the repository: **16 tracked files** were observed in the shallow audit, with the source structure and existing documentation providing the project’s specific context. This README does not treat a prototype, experiment, or archive as a production system without supporting evidence.
-
-**Implementation evidence:** 1 test-related file(s) detected; 2 dependency or package manifest(s) detected; 2 build/CI/infrastructure signal(s) detected; and 3 documentation or governance file(s) detected. Test filenames observed include `main_test.go`. Dependency or package files include `go.mod`, `package.json`. Build, CI, or infrastructure signals include `Dockerfile`, `.github/workflows/ci.yml`.
-
-**Current status:** The repository is tracked on the `main` branch. The existing source tree, configuration, tests, workflows, and documentation remain authoritative for supported behavior and maturity. A code audit is not a production-readiness certification, and the presence of a test or workflow file does not establish that all checks pass.
-
-**Relationship to the wider portfolio:** This repository is one focused component of the broader Skyler Blue Spillers portfolio across AI, software engineering, cloud and DevOps, cybersecurity, blockchain, finance, education, social systems, and creative work. It may provide a service boundary, implementation pattern, experiment, archive, or reusable idea for related repositories. Treat repositories as technical dependencies only where documented interfaces and verified project requirements support that relationship.
-
-**Quality and security note:** No obvious secret-like pattern was detected by the limited static scan; this is not a substitute for a security audit. No TODO/FIXME marker was detected in the scanned text files.
-
----
-
 # Go Concurrent Crawler
 
-![GitHub stars](https://img.shields.io/github/stars/skylerblue333/Go-Concurrent-Crawler?style=flat-square)
-![GitHub license](https://img.shields.io/github/license/skylerblue333/Go-Concurrent-Crawler?style=flat-square)
+Small Go concurrency demonstration/service boundary for bounded crawling workflows.
 
-## 🌟 Overview
-**Go-Concurrent-Crawler** is a professional-grade project within the **SkyCoin4444** ecosystem. It focuses on delivering high-value solutions in the domain of **Go**.
+## Implemented
 
-## 🚀 Key Features
-- **Scalable Architecture**: Designed for enterprise-level growth and performance.
-- **Modern Standards**: Implements best practices for clean code and maintainability.
-- **Robust Integration**: Built to work seamlessly within modern cloud-native environments.
+- Concurrent crawl orchestration with goroutines
+- `sync.Map` visited-set protection
+- Worker-slot semaphore
+- Context cancellation and timeout handling
+- Buffered result collection
+- HTTP endpoint at `POST /api/v1/crawl`
 
-## 🛠️ Technology Stack
-- **Primary Domain**: Go
-- **Ecosystem**: SkyCoin4444 Digital Platform
+## Important limitation
 
-## 📂 Structure
-The project is organized into a modular structure to ensure clarity and ease of development.
+The current crawler uses **simulated fetching and link discovery** (`time.Sleep` and generated `/a`/`/b` links). It does not currently fetch arbitrary websites or parse real HTML.
 
-## 👨‍💻 Author
-**Skyler Blue Spillers**
-*Professional Chess Player & Software Engineer*
+Therefore this repository is **not yet a production web crawler**. It is a concurrency foundation that can be connected to a real HTTP client/parser when that capability is required by the canonical ecosystem.
 
----
-*Powered by SkyCoin4444*
+## Ecosystem role
+
+Potential canonical boundary: **Supporting Services / Data Ingestion**. Prefer integrating this concurrency pattern into the canonical data-ingestion pipeline rather than creating an unnecessary standalone production microservice.
+
+## Validation
+
+The repository contains Go tests and CI configuration according to the existing repository audit. Passing status must be established from actual workflow/test evidence; this README makes no unsupported production-readiness claim.
+
+## License
+
+See the repository license and existing source files for applicable terms.
