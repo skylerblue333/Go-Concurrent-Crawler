@@ -1,30 +1,57 @@
-# Go Concurrent Crawler
+# Sky Concurrent Crawler
 
-Small Go concurrency demonstration/service boundary for bounded crawling workflows.
+A bounded concurrent HTTP fetch service in Go for the SKYCOIN4444 engineering portfolio.
 
-## Implemented
+## Status
 
-- Concurrent crawl orchestration with goroutines
-- `sync.Map` visited-set protection
-- Worker-slot semaphore
-- Context cancellation and timeout handling
-- Buffered result collection
-- HTTP endpoint at `POST /api/v1/crawl`
+**Engineering beta.** The service accepts a bounded batch of public HTTP(S) URLs, fetches them concurrently, extracts page titles, and returns per-target status/error information. It includes SSRF-oriented destination checks, redirect validation, request/response size limits, server/client timeouts, race-tested concurrency, vulnerability scanning, and a non-root container.
 
-## Important limitation
+It is not a general search-engine crawler: recursive link discovery, robots.txt policy, persistence, distributed scheduling, authentication, tenant isolation, proxy pools, and production deployment are not implemented.
 
-The current crawler uses **simulated fetching and link discovery** (`time.Sleep` and generated `/a`/`/b` links). It does not currently fetch arbitrary websites or parse real HTML.
+## API
 
-Therefore this repository is **not yet a production web crawler**. It is a concurrency foundation that can be connected to a real HTTP client/parser when that capability is required by the canonical ecosystem.
+- `GET /health`
+- `GET /ready`
+- `POST /api/v1/crawl`
 
-## Ecosystem role
+Example:
 
-Potential canonical boundary: **Supporting Services / Data Ingestion**. Prefer integrating this concurrency pattern into the canonical data-ingestion pipeline rather than creating an unnecessary standalone production microservice.
+```json
+{"urls":["https://example.com","https://example.org"],"workers":4}
+```
 
-## Validation
+Requests are limited to 1–32 URLs and 1–16 workers. Each fetched response is capped at 1 MiB. Redirect chains are capped at five hops and every redirect is revalidated.
 
-The repository contains Go tests and CI configuration according to the existing repository audit. Passing status must be established from actual workflow/test evidence; this README makes no unsupported production-readiness claim.
+## Security boundary
+
+The default validator rejects malformed/non-HTTP URLs, URL userinfo, loopback, private, link-local, unspecified, and multicast destinations after DNS resolution. This reduces common SSRF paths but is not a substitute for egress firewalling or DNS-rebinding-resistant infrastructure controls.
+
+## Verification
+
+Requires Go 1.25.x:
+
+```bash
+gofmt -w .
+go vet ./...
+go test -race -count=1 ./...
+go build .
+```
+
+CI also runs `govulncheck`, builds the container, verifies its configured user is non-root, and smoke-tests `/health`.
+
+## Container
+
+```bash
+docker build -t sky-crawler .
+docker run --rm -p 8080:8080 sky-crawler
+```
+
+The runtime image is distroless and uses UID/GID 65532.
+
+## SKYCOIN4444 integration
+
+Keep this independently deployable and consume it through the HTTP contract for bounded metadata-fetch jobs. Before using it for untrusted production workloads, add authenticated access, egress policy, durable job state, rate limiting, observability aggregation, and explicit robots/content-policy handling.
 
 ## License
 
-See the repository license and existing source files for applicable terms.
+See `LICENSE`.
