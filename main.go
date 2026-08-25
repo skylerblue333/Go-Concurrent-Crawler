@@ -33,12 +33,15 @@ type CrawlResult struct {
 	Error      string `json:"error,omitempty"`
 }
 
+type URLValidator func(string) (*url.URL, error)
+
 type Crawler struct {
-	client *http.Client
+	client   *http.Client
+	validate URLValidator
 }
 
 func NewCrawler(client *http.Client) *Crawler {
-	return &Crawler{client: client}
+	return &Crawler{client: client, validate: validatePublicURL}
 }
 
 func validatePublicURL(raw string) (*url.URL, error) {
@@ -74,7 +77,7 @@ func normalizeTitle(body []byte) string {
 }
 
 func (c *Crawler) Fetch(ctx context.Context, raw string) CrawlResult {
-	parsed, err := validatePublicURL(raw)
+	parsed, err := c.validate(raw)
 	if err != nil {
 		return CrawlResult{URL: raw, Error: err.Error()}
 	}
